@@ -1,0 +1,31 @@
+name: untitled
+description: Untitled Flutter  app.
+version: 1.0.0+1
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+
+dependencies:
+  cfb: 
+    path: ../../packages/cfb
+  equatable: ^2.0.5
+  flutter:
+    sdk: flutter
+  flutter_cfb: 
+    path: ../../packages/flutter_cfb    
+  flutter_localizations:
+    sdk: flutter
+  formz: ^0.8.0
+  intl: ^0.19.0
+  rxdart: ^0.28.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  mocktail: ^1.0.4
+  very_good_analysis: ^6.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true
