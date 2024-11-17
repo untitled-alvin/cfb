@@ -163,3 +163,5 @@ void main() {
 - Dart 2: >= 2.12
 
 ## Examples
+
+- [Untitled](https://github.com/untitled-alvin/cfb/tree/main/examples/untitled) - an example of how to use a `CFB` in a pure Dart app.
