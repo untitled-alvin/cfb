@@ -1,0 +1,20 @@
+name: flutter_cfb
+description: Widgets that make it easy to integrate cfb into Flutter. Built to work with cfb.
+version: 0.1.0+1
+publish_to: none
+
+environment:
+  sdk: ^3.5.0
+  flutter: ^3.24.0
+
+dependencies:
+  cfb:
+    path: ../cfb
+  flutter:
+    sdk: flutter
+  meta: ^1.16.0
+  provider: ^6.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
