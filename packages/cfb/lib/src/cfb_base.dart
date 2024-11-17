@@ -46,8 +46,7 @@ abstract class ErrorSink implements Closable {
 }
 
 /// {@template cfb_base}
-/// An interface for the core functionality implemented by
-/// both [CFB] and [Cubit].
+/// An interface for the core functionality implemented by [CFB].
 /// {@endtemplate}
 abstract class CFBBase<State>
     implements StateStreamableSource<State>, Emittable<State>, ErrorSink {
@@ -108,8 +107,8 @@ abstract class CFBBase<State>
 
   /// Called whenever a [change] occurs with the given [change].
   /// A [change] occurs when a new `state` is emitted.
-  /// [onChange] is called before the `state` of the `cubit` is updated.
-  /// [onChange] is a great spot to add logging/analytics for a specific `cubit`.
+  /// [onChange] is called before the `state` of the `cfb` is updated.
+  /// [onChange] is a great spot to add logging/analytics for a specific `cfb`.
   ///
   /// **Note: `super.onChange` should always be called first.**
   /// ```dart
@@ -124,7 +123,7 @@ abstract class CFBBase<State>
   ///
   /// See also:
   ///
-  /// * [CFBObserver] for observing [Cubit] behavior globally.
+  /// * [CFBObserver] for observing [CFB] behavior globally.
   ///
   @protected
   @mustCallSuper

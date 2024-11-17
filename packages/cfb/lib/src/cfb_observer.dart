@@ -9,8 +9,8 @@ abstract class CFBObserver {
   const CFBObserver();
 
   /// Called whenever a [CFB] is instantiated.
-  /// In many cases, a cubit may be lazily instantiated and
-  /// [onCreate] can be used to observe exactly when the cubit
+  /// In many cases, a cfb may be lazily instantiated and
+  /// [onCreate] can be used to observe exactly when the cfb
   /// instance is created.
   @protected
   @mustCallSuper
@@ -41,7 +41,7 @@ abstract class CFBObserver {
     Transition<dynamic, dynamic> transition,
   ) {}
 
-  /// Called whenever an [error] is thrown in any [CFB] or [Cubit].
+  /// Called whenever an [error] is thrown in any [CFB].
   /// The [stackTrace] argument may be [StackTrace.empty] if an error
   /// was received without a stack trace.
   @protected

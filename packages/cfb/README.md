@@ -4,59 +4,162 @@
 [![Powered by Mason](https://img.shields.io/endpoint?url=https%3A%2F%2Ftinyurl.com%2Fmason-badge)](https://github.com/felangel/mason)
 [![License: MIT][license_badge]][license_link]
 
-Package manages state in the application copied from BLOC
 
-## Installation 💻
+Package manages state in the application copied from BLOC .
 
-**❗ In order to start using Cfb you must have the [Dart SDK][dart_install_link] installed on your machine.**
+### CFB
 
-Install via `dart pub add`:
+![CFB Architecture]
 
-```sh
-dart pub add cfb
+A `CFB` is a more advanced class which relies on `events` to trigger `state` changes rather than functions. `CFB` also extends `CFBBase` which means it has a similar public API as `Cubit`. However, rather than calling a `function` on a `CFB` and directly emitting a new `state`, `CFBs` receive `events` and convert the incoming `events` into outgoing `states`.
+
+![CFB Flow]
+
+State changes in cfb begin when events are added which triggers `onEvent`. The events are then funnelled through an `EventTransformer`. By default, each event is processed concurrently but a custom `EventTransformer` can be provided to manipulate the incoming event stream. All registered `EventHandlers` for that event type are then invoked with the incoming event. Each `EventHandler` is responsible for emitting zero or more states in response to the event. Lastly, `onTransition` is called just before the state is updated and contains the current state, event, and next state.
+
+#### Creating a CFB
+
+```dart
+/// The events which `CounterCFB` will react to.
+sealed class CounterEvent {}
+
+/// Notifies cfb to increment state.
+final class CounterIncrementPressed extends CounterEvent {}
+
+/// A `CounterCFB` which handles converting `CounterEvent`s into `int`s.
+class CounterCFB extends CFB<CounterEvent, int> {
+  /// The initial state of the `CounterCFB` is 0.
+  CounterCFB() : super(0) {
+    /// When a `CounterIncrementPressed` event is added,
+    /// the current `state` of the cfb is accessed via the `state` property
+    /// and a new state is emitted via `emit`.
+    on<CounterIncrementPressed>((event, emit) => emit(state + 1));
+  }
+}
 ```
 
----
+#### Using a CFB
 
-## Continuous Integration 🤖
+```dart
+Future<void> main() async {
+  /// Create a `CounterCFB` instance.
+  final cfb = CounterCFB();
 
-Cfb comes with a built-in [GitHub Actions workflow][github_actions_link] powered by [Very Good Workflows][very_good_workflows_link] but you can also add your preferred CI/CD solution.
+  /// Access the state of the `cfb` via `state`.
+  print(cfb.state); // 0
 
-Out of the box, on each pull request and push, the CI `formats`, `lints`, and `tests` the code. This ensures the code remains consistent and behaves correctly as you add functionality or make changes. The project uses [Very Good Analysis][very_good_analysis_link] for a strict set of analysis options used by our team. Code coverage is enforced using the [Very Good Workflows][very_good_coverage_link].
+  /// Interact with the `cfb` to trigger `state` changes.
+  cfb.add(CounterIncrementPressed());
 
----
+  /// Wait for next iteration of the event-loop
+  /// to ensure event has been processed.
+  await Future.delayed(Duration.zero);
 
-## Running Tests 🧪
+  /// Access the new `state`.
+  print(cfb.state); // 1
 
-To run all unit tests:
-
-```sh
-dart pub global activate coverage 1.2.0
-dart test --coverage=coverage
-dart pub global run coverage:format_coverage --lcov --in=coverage --out=coverage/lcov.info
+  /// Close the `cfb` when it is no longer needed.
+  await cfb.close();
+}
 ```
 
-To view the generated coverage report you can use [lcov](https://github.com/linux-test-project/lcov).
+#### Observing a CFB
 
-```sh
-# Generate Coverage Report
-genhtml coverage/lcov.info -o coverage/
+Since all `CFBs` extend `CFBBase` just like `Cubit`, `onChange` and `onError` can be overridden in a `CFB` as well.
 
-# Open Coverage Report
-open coverage/index.html
+In addition, `CFBs` can also override `onEvent` and `onTransition`.
+
+`onEvent` is called any time a new `event` is added to the `CFB`.
+
+`onTransition` is similar to `onChange`, however, it contains the `event` which triggered the state change in addition to the `currentState` and `nextState`.
+
+```dart
+sealed class CounterEvent {}
+
+final class CounterIncrementPressed extends CounterEvent {}
+
+class CounterCFB extends CFB<CounterEvent, int> {
+  CounterCFB() : super(0) {
+    on<CounterIncrementPressed>((event, emit) => emit(state + 1));
+  }
+
+  @override
+  void onEvent(CounterEvent event) {
+    super.onEvent(event);
+    print(event);
+  }
+
+  @override
+  void onChange(Change<int> change) {
+    super.onChange(change);
+    print(change);
+  }
+
+  @override
+  void onTransition(Transition<CounterEvent, int> transition) {
+    super.onTransition(transition);
+    print(transition);
+  }
+
+  @override
+  void onError(Object error, StackTrace stackTrace) {
+    print('$error, $stackTrace');
+    super.onError(error, stackTrace);
+  }
+}
 ```
 
-[dart_install_link]: https://dart.dev/get-dart
-[github_actions_link]: https://docs.github.com/en/actions/learn-github-actions
-[license_badge]: https://img.shields.io/badge/license-MIT-blue.svg
-[license_link]: https://opensource.org/licenses/MIT
-[logo_black]: https://raw.githubusercontent.com/VGVentures/very_good_brand/main/styles/README/vgv_logo_black.png#gh-light-mode-only
-[logo_white]: https://raw.githubusercontent.com/VGVentures/very_good_brand/main/styles/README/vgv_logo_white.png#gh-dark-mode-only
-[mason_link]: https://github.com/felangel/mason
-[very_good_analysis_badge]: https://img.shields.io/badge/style-very_good_analysis-B22C89.svg
-[very_good_analysis_link]: https://pub.dev/packages/very_good_analysis
-[very_good_coverage_link]: https://github.com/marketplace/actions/very-good-coverage
-[very_good_ventures_link]: https://verygood.ventures
-[very_good_ventures_link_light]: https://verygood.ventures#gh-light-mode-only
-[very_good_ventures_link_dark]: https://verygood.ventures#gh-dark-mode-only
-[very_good_workflows_link]: https://github.com/VeryGoodOpenSource/very_good_workflows
+`CFBObserver` can be used to observe all `cfbs` as well.
+
+```dart
+class MyCFBObserver extends CFBObserver {
+  @override
+  void onCreate(CFBBase cfb) {
+    super.onCreate(cfb);
+    print('onCreate -- ${cfb.runtimeType}');
+  }
+
+  @override
+  void onEvent(CFB cfb, Object? event) {
+    super.onEvent(cfb, event);
+    print('onEvent -- ${cfb.runtimeType}, $event');
+  }
+
+  @override
+  void onChange(CFBBase cfb, Change change) {
+    super.onChange(cfb, change);
+    print('onChange -- ${cfb.runtimeType}, $change');
+  }
+
+  @override
+  void onTransition(CFB cfb, Transition transition) {
+    super.onTransition(cfb, transition);
+    print('onTransition -- ${cfb.runtimeType}, $transition');
+  }
+
+  @override
+  void onError(CFBBase cfb, Object error, StackTrace stackTrace) {
+    print('onError -- ${cfb.runtimeType}, $error');
+    super.onError(cfb, error, stackTrace);
+  }
+
+  @override
+  void onClose(CFBBase cfb) {
+    super.onClose(cfb);
+    print('onClose -- ${cfb.runtimeType}');
+  }
+}
+```
+
+```dart
+void main() {
+  CFB.observer = MyCFBObserver();
+  // Use cfbs...
+}
+```
+
+## Dart Versions
+
+- Dart 2: >= 2.12
+
+## Examples
